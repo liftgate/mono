@@ -77,9 +77,10 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad)
                     }
 
                     // If previously locked, and a release trigger is set, release the lock.
-                    if (mapping.releaseTrigger != null && mapping.lock)
+                    val releaseTrigger = mapping.releaseTrigger
+                    if (releaseTrigger != null && mapping.lock)
                     {
-                        mapping.releaseTrigger!!()
+                        releaseTrigger()
                     }
 
                     mapping.lock = false
