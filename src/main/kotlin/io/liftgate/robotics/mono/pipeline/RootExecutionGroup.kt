@@ -1,18 +1,34 @@
 package io.liftgate.robotics.mono.pipeline
 
 import io.liftgate.robotics.mono.Mono
+import kotlin.reflect.KClass
 
 /**
  * @author GrowlyX
  * @since 10/22/2023
  */
-class RootExecutionGroup(
-    override val members: List<SingleOrGroupExecution>
-) : ExecutionGroup
+class RootExecutionGroup : ExecutionGroup
 {
     private val metadata = ExecutionMetadata()
+    override val members = mutableListOf<SingleOrGroupExecution>()
 
-    fun execute()
+    override val contextProviders = mutableMapOf<KClass<out StageContext>, (ExecutionMetadata) -> Any>()
+
+    inline fun <reified T : StageContext> providesContext(
+        crossinline builder: () -> T
+    )
+    {
+        contextProviders[T::class] = { builder() }
+    }
+
+    inline fun <reified T : StageContext> providesContext(
+        crossinline builder: (ExecutionMetadata) -> T
+    )
+    {
+        contextProviders[T::class] = { builder(it) }
+    }
+
+    fun executeBlocking()
     {
         timedExecution(this.metadata)
     }
