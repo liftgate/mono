@@ -2,6 +2,8 @@ package io.liftgate.robotics.mono
 
 import com.qualcomm.robotcore.hardware.Gamepad
 import io.liftgate.robotics.mono.gamepad.GamepadCommands
+import io.liftgate.robotics.mono.pipeline.RootExecutionGroup
+import io.liftgate.robotics.mono.pipeline.SingleOrGroupExecution
 
 /**
  * @author GrowlyX
@@ -10,4 +12,6 @@ import io.liftgate.robotics.mono.gamepad.GamepadCommands
 object Mono
 {
     fun commands(gamepad: Gamepad) = GamepadCommands(gamepad)
+    fun executionGroup(vararg members: SingleOrGroupExecution) =
+        RootExecutionGroup(members.toList())
 }

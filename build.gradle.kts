@@ -31,7 +31,7 @@ kotlin {
 tasks.withType<ShadowJar> {
     archiveClassifier.set("")
     archiveFileName.set(
-        "on-bot-kotlin-${project.name}.jar"
+        "mono-${project.name}.jar"
     )
 }
 
