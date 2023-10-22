@@ -11,6 +11,8 @@ import io.liftgate.robotics.mono.pipeline.SingleOrGroupExecution
  */
 object Mono
 {
+    var logSink = { message: String -> println(message) }
+
     fun commands(gamepad: Gamepad) = GamepadCommands(gamepad)
     fun executionGroup(vararg members: SingleOrGroupExecution) =
         RootExecutionGroup(members.toList())

@@ -89,14 +89,14 @@ class ExecutionGroupTests
             }
         )
 
-        println("-".repeat(25))
-        println("Describing")
-        println("-".repeat(25))
+        Mono.logSink("-".repeat(25))
+        Mono.logSink("Describing")
+        Mono.logSink("-".repeat(25))
         group.describe()
-        println("-".repeat(25))
-        println("Executing")
-        println("-".repeat(25))
+        Mono.logSink("-".repeat(25))
+        Mono.logSink("Executing")
+        Mono.logSink("-".repeat(25))
         group.execute()
-        println("-".repeat(25))
+        Mono.logSink("-".repeat(25))
     }
 }

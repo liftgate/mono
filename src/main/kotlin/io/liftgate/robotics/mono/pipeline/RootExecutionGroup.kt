@@ -1,5 +1,7 @@
 package io.liftgate.robotics.mono.pipeline
 
+import io.liftgate.robotics.mono.Mono
+
 /**
  * @author GrowlyX
  * @since 10/22/2023
@@ -21,11 +23,11 @@ class RootExecutionGroup(
         {
             if (member.isSingleExecution())
             {
-                println("${" ".repeat(level)}| ${member.id()}")
+                Mono.logSink("${" ".repeat(level)}| ${member.id()}")
                 return
             }
 
-            println("${" ".repeat(level)}- ${member.id()}")
+            Mono.logSink("${" ".repeat(level)}- ${member.id()}")
 
             member.group!!.members.forEach {
                 recur(level + 1, it)
