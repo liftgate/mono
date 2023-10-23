@@ -1,5 +1,6 @@
 package io.liftgate.robotics.mono.pipeline
 
+import io.liftgate.robotics.mono.Mono
 import java.util.concurrent.CompletableFuture
 
 /**
@@ -14,9 +15,9 @@ interface ParallelExecutionGroup : ExecutionGroup
             *members
                 .map {
                     CompletableFuture
-                        .runAsync {
+                        .runAsync({
                             it.timedExecution(metadata, level + 1)
-                        }
+                        }, Mono.EXECUTION)
                 }
                 .toTypedArray()
         )

@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "io.liftgate.robotics.mono"
-version = "1.1-SNAPSHOT"
+version = "1.3-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -25,7 +25,7 @@ tasks.test {
 }
 
 kotlin {
-    jvmToolchain(11)
+    jvmToolchain(8)
 }
 
 tasks.withType<ShadowJar> {
@@ -39,7 +39,7 @@ tasks.withType<KotlinCompile> {
     kotlinOptions {
         // for compat purposes
         javaParameters = true
-        jvmTarget = "11"
+        jvmTarget = "1.8"
     }
 }
 

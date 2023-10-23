@@ -19,10 +19,10 @@ interface SingleExecutionWithContext<T : StageContext> : SingleExecution
         Mono.logSink("[${id()}] Created context")
 
         val future = CompletableFuture
-            .runAsync {
+            .runAsync({
                 executeAsync(level, metadata, context)
                 Mono.logSink("[${id()}] Finished async execution")
-            }
+            }, Mono.EXECUTION)
 
         // wait until the future can does its thing
         Mono.logSink("[${id()}] Waiting until async execution is complete...")

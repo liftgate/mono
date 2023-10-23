@@ -1,14 +1,15 @@
 package io.liftgate.robotics.mono.gamepad
 
 import com.qualcomm.robotcore.hardware.Gamepad
-import java.lang.Thread.sleep
-import kotlin.concurrent.thread
+import io.liftgate.robotics.mono.Mono
+import java.util.concurrent.ScheduledFuture
+import java.util.concurrent.TimeUnit
 
 /**
  * @author GrowlyX
  * @since 9/4/2023
  */
-class GamepadCommands internal constructor(private val gamepad: Gamepad)
+class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runnable
 {
     enum class ButtonBehavior(val requiresLock: Boolean = false)
     {
@@ -29,73 +30,72 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad)
     )
 
     private val listeners = mutableMapOf<() -> Boolean, ButtonMapping>()
-    private var thread: Thread? = null
+    private var future: ScheduledFuture<*>? = null
 
     fun where(base: ButtonType) = ButtonMappingBuilder { isActive(base) }
 
-    fun startListening()
+    override fun run()
     {
-        check(thread == null)
-
-        thread = thread(isDaemon = true) {
-            while (true)
+        for ((expr, mapping) in listeners)
+        {
+            // if the expression is true, trigger the handler.
+            if (expr())
             {
-                for ((expr, mapping) in listeners)
+                // if this requires a lock (single-use), don't continue until it's released
+                if (mapping.behavior.requiresLock)
                 {
-                    // if the expression is true, trigger the handler.
-                    if (expr())
+                    if (mapping.lock)
                     {
-                        // if this requires a lock (single-use), don't continue until it's released
-                        if (mapping.behavior.requiresLock)
-                        {
-                            if (mapping.lock)
-                            {
-                                continue
-                            }
-                        }
+                        continue
+                    }
+                }
 
-                        // we lock just in-case for release triggers to work properly
-                        mapping.lock = true
+                // we lock just in-case for release triggers to work properly
+                mapping.lock = true
 
-                        if (mapping.delay != null)
-                        {
-                            // Ensure we don't exceed the delay
-                            if (mapping.lastTrigger + mapping.delay!! > System.currentTimeMillis())
-                            {
-                                continue
-                            }
-
-                            mapping.lastTrigger = System.currentTimeMillis()
-                        }
-
-                        runCatching {
-                            mapping.handler()
-                        }.onFailure {
-                            it.printStackTrace()
-                        }
+                if (mapping.delay != null)
+                {
+                    // Ensure we don't exceed the delay
+                    if (mapping.lastTrigger + mapping.delay!! > System.currentTimeMillis())
+                    {
                         continue
                     }
 
-                    // If previously locked, and a release trigger is set, release the lock.
-                    val releaseTrigger = mapping.releaseTrigger
-                    if (releaseTrigger != null && mapping.lock)
-                    {
-                        releaseTrigger()
-                    }
-
-                    mapping.lock = false
-                    mapping.lastTrigger = 0L
+                    mapping.lastTrigger = System.currentTimeMillis()
                 }
 
-                sleep(10L)
+                runCatching {
+                    mapping.handler()
+                }.onFailure {
+                    it.printStackTrace()
+                }
+                continue
             }
+
+            // If previously locked, and a release trigger is set, release the lock.
+            val releaseTrigger = mapping.releaseTrigger
+            if (releaseTrigger != null && mapping.lock)
+            {
+                releaseTrigger()
+            }
+
+            mapping.lock = false
+            mapping.lastTrigger = 0L
         }
     }
 
+    fun startListening()
+    {
+        check(future == null)
+        future = Mono.COMMANDS.scheduleAtFixedRate(
+            this, 0L, 50L, TimeUnit.MILLISECONDS
+        )
+    }
+
     fun stopListening() = with(this) {
-        checkNotNull(thread)
-        thread!!.interrupt()
-        thread = null
+        checkNotNull(future)
+        future!!.cancel(true)
+        future = null
     }
 
     fun isActive(base: ButtonType) = base.gamepadMapping(gamepad)

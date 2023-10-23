@@ -3,6 +3,7 @@ package io.liftgate.robotics.mono
 import com.qualcomm.robotcore.hardware.Gamepad
 import io.liftgate.robotics.mono.gamepad.GamepadCommands
 import io.liftgate.robotics.mono.pipeline.RootExecutionGroup
+import java.util.concurrent.Executors
 
 /**
  * @author GrowlyX
@@ -10,6 +11,12 @@ import io.liftgate.robotics.mono.pipeline.RootExecutionGroup
  */
 object Mono
 {
+    @JvmStatic
+    val COMMANDS = Executors.newSingleThreadScheduledExecutor()
+
+    @JvmStatic
+    val EXECUTION = Executors.newSingleThreadScheduledExecutor()
+
     var logSink = { message: String -> println(message) }
 
     fun commands(gamepad: Gamepad) = GamepadCommands(gamepad)
