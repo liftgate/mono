@@ -98,7 +98,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
         future = null
     }
 
-    fun isActive(base: ButtonType) = base.gamepadMapping(gamepad)
+    private fun isActive(base: ButtonType) = base.gamepadMapping(gamepad)
 
     inner class ButtonMappingBuilder(
         private var expression: () -> Boolean = { true }
@@ -132,7 +132,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
         }
 
         @JvmOverloads
-        fun triggers(executor: () -> Unit, delay: Long? = null): InternalButtonMappingBuilderWithExecutor
+        fun triggers(delay: Long? = null, executor: () -> Unit): InternalButtonMappingBuilderWithExecutor
         {
             check(delay == null || delay >= 50L) {
                 "Delay cannot be less than 50ms as that is the tick speed"
