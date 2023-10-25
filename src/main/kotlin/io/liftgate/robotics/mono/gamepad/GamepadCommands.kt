@@ -20,9 +20,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
     data class ButtonMapping(
         val handler: () -> Unit,
         val behavior: ButtonBehavior,
-        // TODO: B + Y will trigger a B listener (possibly?)
-        //  associate by ButtonType and break if a larger expression passes
-        // val totalExpressionAdditions: Int,
+        val usedButtons: Set<ButtonType>,
         val releaseTrigger: (() -> Unit)? = null,
         var delay: Long?,
         var lastTrigger: Long = 0L,
@@ -36,8 +34,15 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
 
     override fun run()
     {
-        for ((expr, mapping) in listeners)
+        val buttonsTriggered = mutableSetOf<ButtonType>()
+        for ((expr, mapping) in listeners.entries.sortedByDescending { it.value.usedButtons.size })
         {
+            // a higher priority button (B + Y rather than B) was triggered.
+            if (mapping.usedButtons.intersect(buttonsTriggered).isNotEmpty())
+            {
+                continue
+            }
+
             // if the expression is true, trigger the handler.
             if (expr())
             {
@@ -65,6 +70,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
                 }
 
                 runCatching {
+                    buttonsTriggered += mapping.usedButtons
                     mapping.handler()
                 }.onFailure {
                     it.printStackTrace()
@@ -101,23 +107,22 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
     private fun isActive(base: ButtonType) = base.gamepadMapping(gamepad)
 
     inner class ButtonMappingBuilder(
+        private val usedButtons: MutableSet<ButtonType> = mutableSetOf(),
         private var expression: () -> Boolean = { true }
     )
     {
-        fun and(b: ButtonType) = apply {
+        fun and(buttonType: ButtonType) = apply {
             val prevExp = expression
-            expression = { prevExp() && isActive(b) }
-        }
-
-        fun andNot(b: ButtonType) = apply {
-            val prevExp = expression
-            expression = { prevExp() && !(isActive(b)) }
+            usedButtons += buttonType
+            expression = { prevExp() && isActive(buttonType) }
         }
 
         fun or(customizer: ButtonMappingBuilder.() -> ButtonMappingBuilder) = apply {
             val prevExp = expression
-            val customizedExpr = customizer(ButtonMappingBuilder()).expression
+            val customized = customizer(ButtonMappingBuilder())
+            val customizedExpr = customized.expression
 
+            usedButtons += customized.usedButtons
             expression = { prevExp() || customizedExpr() }
         }
 
@@ -198,7 +203,8 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
                     handler = executor,
                     behavior = behavior,
                     releaseTrigger = onRelease,
-                    delay = delay
+                    delay = delay,
+                    usedButtons = usedButtons.toSet()
                 )
                 built = true
             }
