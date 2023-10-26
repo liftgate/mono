@@ -107,7 +107,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
     private fun isActive(base: ButtonType) = base.gamepadMapping(gamepad)
 
     inner class ButtonMappingBuilder(
-        private val usedButtons: MutableSet<ButtonType>,
+        private val usedButtons: MutableSet<ButtonType> = mutableSetOf(),
         private var expression: () -> Boolean = { true }
     )
     {
