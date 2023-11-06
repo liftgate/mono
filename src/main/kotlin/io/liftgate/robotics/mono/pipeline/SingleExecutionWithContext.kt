@@ -29,9 +29,6 @@ interface SingleExecutionWithContext<T : StageContext> : SingleExecution
         if (context.requiresAtLeast() != null)
         {
             Thread.sleep(context.requiresAtLeast()!!)
-        } else
-        {
-            future.join()
         }
 
         while (!context.isCompleted())
@@ -53,6 +50,12 @@ interface SingleExecutionWithContext<T : StageContext> : SingleExecution
 
             // block until it's complete
             Thread.sleep(50L)
+        }
+
+        if (!future.isDone)
+        {
+            future.cancel(true)
+            Mono.logSink("[${id()}] Future was not complete, but context was marked as completed")
         }
 
         context.dispose()
