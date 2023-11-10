@@ -2,6 +2,8 @@ package io.liftgate.robotics.mono.gamepad
 
 import com.qualcomm.robotcore.hardware.Gamepad
 import io.liftgate.robotics.mono.Mono
+import io.liftgate.robotics.mono.subsystem.Subsystem
+import io.liftgate.robotics.mono.subsystem.terminable.composite.CompositeTerminable
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
@@ -9,7 +11,7 @@ import java.util.concurrent.TimeUnit
  * @author GrowlyX
  * @since 9/4/2023
  */
-class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runnable
+class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runnable, Subsystem, CompositeTerminable by CompositeTerminable.create()
 {
     enum class ButtonBehavior(val requiresLock: Boolean = false)
     {
@@ -88,20 +90,6 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
             mapping.lock = false
             mapping.lastTrigger = 0L
         }
-    }
-
-    fun startListening()
-    {
-        check(future == null)
-        future = Mono.COMMANDS.scheduleAtFixedRate(
-            this, 0L, 50L, TimeUnit.MILLISECONDS
-        )
-    }
-
-    fun stopListening() = with(this) {
-        checkNotNull(future)
-        future!!.cancel(true)
-        future = null
     }
 
     private fun isActive(base: ButtonType) = base.gamepadMapping(gamepad)
@@ -210,4 +198,25 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
             }
         }
     }
+
+    override fun initialize()
+    {
+        check(future == null)
+        future = Mono.COMMANDS.scheduleAtFixedRate(
+            this, 0L, 50L, TimeUnit.MILLISECONDS
+        )
+
+        with {
+            dispose()
+        }
+    }
+
+    override fun dispose() = with(this) {
+        checkNotNull(future)
+        future!!.cancel(true)
+        future = null
+    }
+
+    override fun composeStageContext() = throw IllegalStateException("No completion stage in GamepadCommands")
+    override fun isCompleted() = throw IllegalStateException("No completion state in GamepadCommands")
 }

@@ -3,12 +3,13 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     `maven-publish`
+    java
     kotlin("jvm") version "1.9.10"
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 group = "io.liftgate.robotics.mono"
-version = "1.8-SNAPSHOT"
+version = "2.3-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -28,18 +29,26 @@ kotlin {
     jvmToolchain(8)
 }
 
-tasks.withType<ShadowJar> {
-    archiveClassifier.set("")
-    archiveFileName.set(
-        "mono-${project.name}.jar"
-    )
-}
+tasks {
+    withType<ShadowJar> {
+        archiveClassifier.set("")
+        archiveFileName.set(
+            "mono-${project.name}.jar"
+        )
+    }
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        // for compat purposes
-        javaParameters = true
-        jvmTarget = "1.8"
+    withType<JavaCompile> {
+        options.compilerArgs.add("-parameters")
+        options.fork()
+        options.encoding = "UTF-8"
+    }
+
+    withType<KotlinCompile> {
+        kotlinOptions {
+            // for compat purposes
+            javaParameters = true
+            jvmTarget = "1.8"
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 import io.liftgate.robotics.mono.Mono
 import io.liftgate.robotics.mono.pipeline.StageContext
-import io.liftgate.robotics.mono.pipeline.parallel
+import io.liftgate.robotics.mono.pipeline.simultaneous
 import io.liftgate.robotics.mono.pipeline.single
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -74,7 +74,7 @@ class ExecutionGroupTests
             }
 
             // executed simultaneously
-            parallel(
+            simultaneous(
                 "move and lower elevator"
             ) {
                 single("move towards tape") {
@@ -103,7 +103,7 @@ class ExecutionGroupTests
                 Thread.sleep(1000L)
                 // TODO
             }
-            parallel(
+            simultaneous(
                 "turn towards side bar while elevating claw",
             ) {
                 single("turn towards side bar/backdrop") {
@@ -125,7 +125,7 @@ class ExecutionGroupTests
             // ----
 
             // TODO: do we even need to detect the april tags
-            parallel(
+            simultaneous(
                 "strafe into position while elevating elevator"
             ) {
                 single("strafe into position") {
