@@ -53,6 +53,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
                 {
                     if (mapping.lock)
                     {
+                        Mono.logSink("Locking")
                         continue
                     }
                 }
@@ -72,6 +73,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
                 }
 
                 runCatching {
+                        Mono.logSink("handling")
                     buttonsTriggered += mapping.usedButtons
                     mapping.handler()
                 }.onFailure {
