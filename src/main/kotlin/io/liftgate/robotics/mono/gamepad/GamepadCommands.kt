@@ -48,7 +48,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
             // if the expression is true, trigger the handler.
             if (expr())
             {
-                // if this requires a lock (single-use), don't continue until it's released
+                // if this requires a lock (sirngle-use), don't continue until it's released
                 if (mapping.behavior.requiresLock)
                 {
                     if (mapping.lock)
@@ -136,7 +136,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
 
         inner class InternalButtonMappingBuilderWithExecutor(
             private val executor: () -> Unit,
-            private val delay: Long?,
+            private val t: Long?,
             private var built: Boolean = false
         )
         {
@@ -181,7 +181,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
                 build(ButtonBehavior.Single, lockRelease)
             }
 
-            private fun build(
+            fun build(
                 behavior: ButtonBehavior,
                 onRelease: (() -> Unit)? = null,
                 delay: Long? = null
