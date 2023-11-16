@@ -18,6 +18,38 @@ commands.where(ButtonType.ButtonA)
     .whenPressedOnce()
 ```
 
+_More complex example:_
+```kotlin
+commands
+    .where(ButtonType.ButtonA)
+    .onlyWhenNot { bundleExecutionInProgress }
+    .triggers {
+        bundleExecutionInProgress = true
+        extendableClaw.toggleExtender(
+            ExtendableClaw.ExtenderState.Intake
+        )
+
+        extendableClaw.updateClawState(
+            ExtendableClaw.ClawStateUpdate.Both,
+            ExtendableClaw.ClawState.Open
+        )
+    }
+    .andIsHeldUntilReleasedWhere {
+        extendableClaw.updateClawState(
+            ExtendableClaw.ClawStateUpdate.Both,
+            ExtendableClaw.ClawState.Closed
+        )
+
+        scheduleAsyncExecution(450L) {
+            extendableClaw.toggleExtender(
+                ExtendableClaw.ExtenderState.Deposit
+            )
+
+            bundleExecutionInProgress = false
+        }
+    }
+```
+
 ## Execution Groups:
 Run controlled chains of tasks using Mono Execution Groups!
 
