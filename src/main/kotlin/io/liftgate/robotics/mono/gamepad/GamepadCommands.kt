@@ -136,7 +136,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
 
         inner class InternalButtonMappingBuilderWithExecutor(
             private val executor: () -> Unit,
-            private val t: Long?,
+            private val delay: Long?,
             private var built: Boolean = false
         )
         {
