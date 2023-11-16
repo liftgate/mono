@@ -24,6 +24,7 @@ enum class ButtonType(
     DPadUp(Gamepad::dpad_up),
 
     PlayStationTouchpad(Gamepad::touchpad),
+    PlayStationShare(Gamepad::share),
 
     PlayStationCircle(Gamepad::circle),
     PlayStationCross(Gamepad::cross),
