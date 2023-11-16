@@ -21,5 +21,12 @@ enum class ButtonType(
     DPadLeft(Gamepad::dpad_left),
     DPadDown(Gamepad::dpad_down),
     DPadRight(Gamepad::dpad_right),
-    DPadUp(Gamepad::dpad_up)
+    DPadUp(Gamepad::dpad_up),
+
+    PlayStationTouchpad(Gamepad::touchpad),
+
+    PlayStationCircle(Gamepad::circle),
+    PlayStationCross(Gamepad::cross),
+    PlayStationSquare(Gamepad::square),
+    PlayStationTriangle(Gamepad::triangle)
 }
