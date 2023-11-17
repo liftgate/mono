@@ -34,6 +34,16 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
 
     fun where(base: ButtonType) = ButtonMappingBuilder(usedButtons = mutableSetOf(base)) { isActive(base) }
 
+    fun doBuild(base: ButtonDynamic, check: (Float) -> Boolean) = ButtonMappingBuilder(usedButtons = mutableSetOf()) { isActive(base, check) }
+
+    fun whereDynamicGTE(base: ButtonDynamic, target: Float) = doBuild(base) { it >= target }
+    fun whereDynamicGT(base: ButtonDynamic, target: Float) = doBuild(base) { it > target }
+    fun whereDynamicLTE(base: ButtonDynamic, target: Float) = doBuild(base) { it <= target }
+    fun whereDynamicLT(base: ButtonDynamic, target: Float) = doBuild(base) { it < target }
+    fun whereDynamicEQ(base: ButtonDynamic, target: Float) = doBuild(base) { it == target }
+
+    fun whereDynamicInRange(base: ButtonDynamic, range: IntRange) = doBuild(base) { it.toInt() in range }
+
     override fun run()
     {
         val buttonsTriggered = mutableSetOf<ButtonType>()
@@ -93,6 +103,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
     }
 
     private fun isActive(base: ButtonType) = base.gamepadMapping(gamepad)
+    private fun isActive(base: ButtonDynamic, comparison: (Float) -> Boolean) = comparison(base.position(gamepad))
 
     inner class ButtonMappingBuilder(
         private val usedButtons: MutableSet<ButtonType> = mutableSetOf(),
