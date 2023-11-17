@@ -58,11 +58,12 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
             // if the expression is true, trigger the handler.
             if (expr())
             {
-                // if this requires a lock (single-use), don't continue until it's released
+                // if this requires a lock (sirngle-use), don't continue until it's released
                 if (mapping.behavior.requiresLock)
                 {
                     if (mapping.lock)
                     {
+                        Mono.logSink("Locking")
                         continue
                     }
                 }
@@ -82,6 +83,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
                 }
 
                 runCatching {
+                        Mono.logSink("handling")
                     buttonsTriggered += mapping.usedButtons
                     mapping.handler()
                 }.onFailure {
@@ -192,7 +194,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
                 build(ButtonBehavior.Single, lockRelease)
             }
 
-            private fun build(
+            fun build(
                 behavior: ButtonBehavior,
                 onRelease: (() -> Unit)? = null,
                 delay: Long? = null
