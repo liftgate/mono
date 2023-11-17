@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "io.liftgate.robotics.mono"
-version = "2.4-SNAPSHOT"
+version = "2.5-SNAPSHOT"
 
 repositories {
     mavenCentral()
