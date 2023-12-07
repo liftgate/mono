@@ -25,6 +25,7 @@ enum class ButtonType(
 
     PlayStationTouchpad(Gamepad::touchpad),
     PlayStationShare(Gamepad::share),
+    PlayStationOptions(Gamepad::options),
     PlayStationLogo(Gamepad::ps),
 
     PlayStationCircle(Gamepad::circle),

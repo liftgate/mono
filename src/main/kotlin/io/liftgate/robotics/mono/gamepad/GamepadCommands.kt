@@ -11,7 +11,8 @@ import java.util.concurrent.TimeUnit
  * @author GrowlyX
  * @since 9/4/2023
  */
-class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runnable, Subsystem, CompositeTerminable by CompositeTerminable.create()
+class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runnable, Subsystem,
+    CompositeTerminable by CompositeTerminable.create()
 {
     enum class ButtonBehavior(val requiresLock: Boolean = false)
     {
@@ -34,7 +35,8 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
 
     fun where(base: ButtonType) = ButtonMappingBuilder(usedButtons = mutableSetOf(base)) { isActive(base) }
 
-    fun doBuild(base: ButtonDynamic, check: (Float) -> Boolean) = ButtonMappingBuilder(usedButtons = mutableSetOf()) { isActive(base, check) }
+    fun doBuild(base: ButtonDynamic, check: (Float) -> Boolean) =
+        ButtonMappingBuilder(usedButtons = mutableSetOf()) { isActive(base, check) }
 
     fun whereDynamicGTE(base: ButtonDynamic, target: Float) = doBuild(base) { it >= target }
     fun whereDynamicGT(base: ButtonDynamic, target: Float) = doBuild(base) { it > target }
@@ -83,7 +85,6 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
                 }
 
                 runCatching {
-                        Mono.logSink("handling")
                     buttonsTriggered += mapping.usedButtons
                     mapping.handler()
                 }.onFailure {
