@@ -213,8 +213,20 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
         }
     }
 
+    private var manualUpdates = false
+
+    fun doButtonUpdatesManually()
+    {
+        manualUpdates = true
+    }
+
     override fun initialize()
     {
+        if (manualUpdates)
+        {
+            return
+        }
+
         check(future == null)
         future = Mono.COMMANDS.scheduleAtFixedRate(
             this, 0L, 50L, TimeUnit.MILLISECONDS
@@ -226,9 +238,12 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
     }
 
     override fun dispose() = with(this) {
-        checkNotNull(future)
-        future!!.cancel(true)
-        future = null
+        if (!manualUpdates)
+        {
+            checkNotNull(future)
+            future!!.cancel(true)
+            future = null
+        }
     }
 
     override fun composeStageContext() = throw IllegalStateException("No completion stage in GamepadCommands")
