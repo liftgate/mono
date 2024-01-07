@@ -1,79 +1,142 @@
-# mono
-Boilerplate systems and frameworks for FTC code.
+## Mono
+Mono is an internal library that handles FTC control systems.
+- Autonomous structuring/state machines
+- Driver control gamepad button mapping
+- Robot hardware modularization with Subsystems
 
-## Features:
-- Commands (gamepad control commands)
-- "Subsystems/CommandBases" -> Task Execution Groups (for FTC autonomous)
+### State machines:
+State machines are used in autonomous implementations to plan out chains of tasks our robot takes *(execution groups)*. You need to know three key terms to understand our autonomous programs:
+- `single`: A single task that is executed
+- `simultaneous`: A group of tasks executed **simultaneously**.
+- `consecutive`: A group of tasks executed **consecutively**.
 
-## Commands:
-Control gamepad buttons in a builder fashion using Mono Commands.
-
-Example:
+You can start writing your execution group tasks in the body of a `Mono.buildExecutionGroup { /* here */ }` call. Here is a simple example:
 ```kotlin
-val commands = Mono.commands(gamepad1)
-commands.where(ButtonType.ButtonA)
-    .triggers {
-        println("hey")
+Mono.buildExecutionGroup {
+    single("Forward to tape") {
+        move(-BlueLeft.MoveForwardToTape)
     }
-    .whenPressedOnce()
+}
 ```
 
-_More complex example:_
+And we can make it more complex...
 ```kotlin
-commands
-    .where(ButtonType.ButtonA)
-    .onlyWhenNot { bundleExecutionInProgress }
-    .triggers {
-        bundleExecutionInProgress = true
-        extendableClaw.toggleExtender(
-            ExtendableClaw.ExtenderState.Intake
-        )
+Mono.buildExecutionGroup {
+    simultaneous("move into tape") {
+        single("Forward to tape") {
+            move(-BlueLeft.MoveForwardToTape)
+        }
 
-        extendableClaw.updateClawState(
-            ExtendableClaw.ClawStateUpdate.Both,
-            ExtendableClaw.ClawState.Open
-        )
-    }
-    .andIsHeldUntilReleasedWhere {
-        extendableClaw.updateClawState(
-            ExtendableClaw.ClawStateUpdate.Both,
-            ExtendableClaw.ClawState.Closed
-        )
-
-        scheduleAsyncExecution(450L) {
-            extendableClaw.toggleExtender(
-                ExtendableClaw.ExtenderState.Deposit
+        single("set extender to intake") {
+            clawSubsystem.toggleExtender(
+                ExtendableClaw.ExtenderState.Intake,
+                force = true
             )
-
-            bundleExecutionInProgress = false
-        }
-    }
-```
-
-## Execution Groups:
-Run controlled chains of tasks using Mono Execution Groups!
-
-```kotlin
-val group = Mono.buildExecutionGroup {
-    single("detect team element") {
-        // TODO
-        Thread.sleep(1000L)
-        // do some detection logic and find the tape side
-        put("tape", TapeSide.Left)
-    }
-    // executed simultaneously
-    parallel(
-        "move and lower elevator"
-    ) {
-        single("move towards tape") {
-            val tapeSide = require<TapeSide>("tape")
-            Thread.sleep(1000L)
-            // TODO
-        }
-        single("lower elevator") {
-            Thread.sleep(1000L)
-            // TODO
         }
     }
 }
 ```
+
+And even more complex...
+```kotlin
+    simultaneous("strafe into drop position") {
+        consecutive("strafe") {
+            single("strafe into position") {
+                strafe(-BlueLeft.StrafeIntoPosition)
+            }
+          
+            single("sync into heading") {
+                turn(BlueLeft.TurnTowardsBackboard)
+            }
+        }
+  
+        single("heighten elevator") {
+            elevatorSubsystem.configureElevatorManually(BlueLeft.ZElevatorDropExpectedHeight)
+        }
+    }
+```
+
+### Gamepad Mappings:
+Gamepad mappings are used in our TeleOp code to make writing command executions triggered by the driver 1/2 gamepads easier. These gamepad mappings are created with a builder-style system. A simple example:
+```kotlin
+val gamepad = Mono.commands(gamepad1) // declare your GamepadCommands instance
+
+// launch the airplane when you click the square button, and
+// set it back to armed when you release the square button.
+gp1Commands
+    .where(ButtonType.PlayStationSquare)
+    .triggers {
+        paperPlaneLauncher.launch()
+    }
+    .andIsHeldUntilReleasedWhere {
+        paperPlaneLauncher.reset()
+    }
+```
+
+This builder system makes it very easy for us to build deposit presets in TeleOp:
+```kotlin
+//depositPresetReleaseOnElevatorHeight is hidden
+gp2Commands
+    .where(ButtonType.DPadLeft)
+    .depositPresetReleaseOnElevatorHeight(-630)
+
+gp2Commands
+    .where(ButtonType.DPadUp)
+    .depositPresetReleaseOnElevatorHeight(-850)
+
+gp2Commands
+    .where(ButtonType.DPadRight)
+    .depositPresetReleaseOnElevatorHeight(-1130)
+```
+
+### Subsystems:
+Our robot code is split up into multiple classes through Subsystems. Subsystems are independent components of the robot. An example of a subsystem is: `AirplaneLauncher`.
+
+#### Lifecycle:
+- Subsystem is registered in the subsystem registry (essentially a list of available subsystems we keep control over).
+- When you press init on the opmode, subsystems are **initialized**.
+    - Calls the `doInitialize()` function within the Subsystem implementation.
+- When the opmode is stopped, the subsystems are **disposed**.
+    - Calls the `dispose()` function within the Subsystem implementation.
+
+Here is the real implementation of the `AirplaneLauncher`:
+```kotlin
+class AirplaneLauncher(private val opMode: LinearOpMode) : AbstractSubsystem()
+{
+    private val backingServo by lazy {
+        opMode.hardware<Servo>("launcher")
+    }
+
+    /**
+     * Puts the airplane launcher servo to the LAUNCHED position.
+     */
+    fun launch()
+    {
+        backingServo.position = ClawExpansionConstants.MAX_PLANE_POSITION
+    }
+
+    /**
+     * Puts the airplane launcher servo to the ARMED position.
+     */
+    fun arm()
+    {
+        backingServo.position = ClawExpansionConstants.DEFAULT_PLANE_POSITION
+    }
+
+    /**
+     * Initialize the servo when the subsystem is initalized, and arm the airplane launcher.
+     */
+    override fun doInitialize()
+    {
+        arm()
+    }
+
+    // do nothing since servos don't need to be reset on end
+    override fun dispose()
+    {
+
+    }
+}
+```
+
+
