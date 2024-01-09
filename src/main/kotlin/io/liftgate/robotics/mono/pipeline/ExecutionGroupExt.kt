@@ -17,10 +17,21 @@ fun __INTERNAL__wrap(single: SingleExecution) = object : SingleOrGroupExecution
 }
 
 /**
+ * Halts the current thread for [millis] milliseconds.
+ */
+fun ExecutionGroup.waitMillis(millis: Long) =
+    single("waitMillis-$millis") {
+        Thread.sleep(millis)
+    }
+
+/**
  * Describes a stage with single execution of block [lambda] in
  * context of a new instance of [T].
  */
-inline fun <reified T : StageContext> ExecutionGroup.single(id: String, crossinline lambda: T.(ExecutionMetadata) -> Unit) = with(__INTERNAL__wrap(object : SingleExecutionWithContext<T>
+inline fun <reified T : StageContext> ExecutionGroup.single(
+    id: String,
+    crossinline lambda: T.(ExecutionMetadata) -> Unit
+) = with(__INTERNAL__wrap(object : SingleExecutionWithContext<T>
 {
     override fun provideContext(metadata: ExecutionMetadata) = provides<T>(metadata)
     override fun executeAsync(level: Int, metadata: ExecutionMetadata, context: T) = lambda(context, metadata)
@@ -33,13 +44,14 @@ inline fun <reified T : StageContext> ExecutionGroup.single(id: String, crossinl
  * Describes a stage with single execution of block [lambda]. Run under the
  * parent execution group provided by [single].
  */
-fun ExecutionGroup.single(id: String, lambda: ExecutionMetadata.() -> Unit) = with(__INTERNAL__wrap(object : SingleExecution
-{
-    override fun execute(level: Int, metadata: ExecutionMetadata) = lambda(metadata)
-    override fun id() = id
-})) {
-    this@single += this
-}
+fun ExecutionGroup.single(id: String, lambda: ExecutionMetadata.() -> Unit) =
+    with(__INTERNAL__wrap(object : SingleExecution
+    {
+        override fun execute(level: Int, metadata: ExecutionMetadata) = lambda(metadata)
+        override fun id() = id
+    })) {
+        this@single += this
+    }
 
 /**
  * Builds a parallel execution group with an immutable copy of the
@@ -47,15 +59,16 @@ fun ExecutionGroup.single(id: String, lambda: ExecutionMetadata.() -> Unit) = wi
  *
  * Allows for consecutive executions of [SingleOrGroupExecution] members ((A1 -> B2) -> C).
  */
-fun ParallelExecutionGroup.consecutive(id: String, block: ExecutionGroup.() -> Unit) = with(__INTERNAL__wrap(object : ExecutionGroup
-{
-    override val members = mutableListOf<SingleOrGroupExecution>()
-    override val contextProviders = this@consecutive.contextProviders.toMutableMap()
+fun ParallelExecutionGroup.consecutive(id: String, block: ExecutionGroup.() -> Unit) =
+    with(__INTERNAL__wrap(object : ExecutionGroup
+    {
+        override val members = mutableListOf<SingleOrGroupExecution>()
+        override val contextProviders = this@consecutive.contextProviders.toMutableMap()
 
-    override fun id() = id
-}.apply(block))) {
-    this@consecutive += this
-}
+        override fun id() = id
+    }.apply(block))) {
+        this@consecutive += this
+    }
 
 /**
  * Builds a parallel execution group with an immutable copy
@@ -63,12 +76,13 @@ fun ParallelExecutionGroup.consecutive(id: String, block: ExecutionGroup.() -> U
  *
  * Allows for parallel execution of [SingleOrGroupExecution] members ((A1, B2) -> C).
  */
-fun ExecutionGroup.simultaneous(id: String, block: ParallelExecutionGroup.() -> Unit) = with(__INTERNAL__wrap(object : ParallelExecutionGroup
-{
-    override val members = mutableListOf<SingleOrGroupExecution>()
-    override fun id() = id
+fun ExecutionGroup.simultaneous(id: String, block: ParallelExecutionGroup.() -> Unit) =
+    with(__INTERNAL__wrap(object : ParallelExecutionGroup
+    {
+        override val members = mutableListOf<SingleOrGroupExecution>()
+        override fun id() = id
 
-    override val contextProviders = this@simultaneous.contextProviders.toMutableMap()
-}.apply(block))) {
-    this@simultaneous += this
-}
+        override val contextProviders = this@simultaneous.contextProviders.toMutableMap()
+    }.apply(block))) {
+        this@simultaneous += this
+    }
