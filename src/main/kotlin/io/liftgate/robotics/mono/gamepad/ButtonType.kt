@@ -18,6 +18,9 @@ enum class ButtonType(
     BumperLeft(Gamepad::left_bumper),
     BumperRight(Gamepad::right_bumper),
 
+    JoystickLeft(Gamepad::left_stick_button),
+    JoystickRight(Gamepad::left_stick_button),
+
     DPadLeft(Gamepad::dpad_left),
     DPadDown(Gamepad::dpad_down),
     DPadRight(Gamepad::dpad_right),

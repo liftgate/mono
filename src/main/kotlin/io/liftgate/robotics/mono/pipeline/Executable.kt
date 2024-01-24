@@ -13,7 +13,7 @@ interface Executable : ID
 
     fun timedExecution(metadata: ExecutionMetadata, level: Int = 0)
     {
-        if (!metadata.containsKey("terminate"))
+        if (metadata.containsKey("terminate"))
         {
             Mono.logSink("${" ".repeat(level)}[${id()}] Skipping execution")
             return
