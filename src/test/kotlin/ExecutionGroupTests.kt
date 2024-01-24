@@ -37,6 +37,8 @@ class ExecutionGroupTests
                 Thread.sleep(500L)
                 isComplete = true
 
+                terminateMidExecution()
+
                 println("this should work, but we'll move on in 500ms!")
             }
 

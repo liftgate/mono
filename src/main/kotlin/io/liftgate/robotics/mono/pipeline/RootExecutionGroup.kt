@@ -33,6 +33,23 @@ class RootExecutionGroup : ExecutionGroup
         timedExecution(this.metadata)
     }
 
+    private var hasCalledTermination = false
+    private val terminationLock = Any()
+
+    /**
+     * Allow the program to exit mid-process without having to do
+     * multithreaded magic and messing with Thread#interrupt.
+     */
+    fun terminateMidExecution() = synchronized(terminationLock)
+    {
+        if (hasCalledTermination)
+        {
+            return@synchronized
+        }
+
+        metadata["terminate"] = true
+    }
+
     fun describe()
     {
         fun recur(level: Int, member: SingleOrGroupExecution)

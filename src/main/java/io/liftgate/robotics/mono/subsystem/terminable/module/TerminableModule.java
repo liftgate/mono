@@ -29,13 +29,13 @@ import io.liftgate.robotics.mono.subsystem.terminable.TerminableConsumer;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * A terminable module is a class which manipulates and constructs a number
+ * A terminable module is a class that manipulates and constructs a number
  * of {@link io.liftgate.robotics.mono.subsystem.terminable.Terminable}s.
  */
 public interface TerminableModule {
 
     /**
-     * Performs the tasks to setup this module
+     * Performs the tasks to set up this module
      *
      * @param consumer the terminable consumer
      */

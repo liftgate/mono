@@ -10,8 +10,15 @@ import kotlin.system.measureTimeMillis
 interface Executable : ID
 {
     fun execute(level: Int, metadata: ExecutionMetadata)
+
     fun timedExecution(metadata: ExecutionMetadata, level: Int = 0)
     {
+        if (!metadata.containsKey("terminate"))
+        {
+            Mono.logSink("${" ".repeat(level)}[${id()}] Skipping execution")
+            return
+        }
+
         Mono.logSink("${" ".repeat(level)}[${id()}] Starting execution")
         Mono.logSink("${" ".repeat(level)}[${id()}] Completed execution in ${
             measureTimeMillis { execute(level, metadata) }
