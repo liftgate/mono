@@ -9,7 +9,7 @@ import kotlin.reflect.KProperty
  */
 abstract class StateHolder
 {
-    private val states = mutableSetOf<State<*>>()
+    val states = mutableSetOf<State<*>>()
     fun allPeriodic()
     {
         states.forEach {
@@ -17,7 +17,7 @@ abstract class StateHolder
         }
     }
 
-    private inline fun <reified T : Any> state(
+    inline fun <reified T : Any> state(
         noinline write: (T) -> Unit,
         noinline read: () -> T,
         noinline complete: (T, T) -> Boolean = { one, two -> one == two }
