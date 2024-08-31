@@ -152,6 +152,12 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
             expression = { prevExp() && !lambda() }
         }
 
+        val dependencies = mutableSetOf<State<*>>()
+        fun dependsOn(vararg states: State<*>)
+        {
+            dependencies += states
+        }
+
         @JvmOverloads
         fun triggers(delay: Long? = null, executor: () -> Unit): InternalButtonMappingBuilderWithExecutor
         {
@@ -207,12 +213,6 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
 
                 // behavior is technically single
                 build(ButtonBehavior.Single, lockRelease)
-            }
-
-            val dependencies = mutableSetOf<State<*>>()
-            fun dependsOn(vararg states: State<*>)
-            {
-                dependencies += states
             }
 
             fun build(
