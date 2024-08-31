@@ -153,8 +153,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
         }
 
         val dependencies = mutableSetOf<State<*>>()
-        fun dependsOn(vararg states: State<*>)
-        {
+        fun dependsOn(vararg states: State<*>) = apply {
             dependencies += states
         }
 
