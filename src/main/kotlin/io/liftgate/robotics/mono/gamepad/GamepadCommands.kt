@@ -66,7 +66,12 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
                 {
                     if (!mapping.lock)
                     {
-                        if (mapping.dependencies.any { it.inProgress() })
+                        val dependenciesUsed = listeners.values
+                            .filter { it.lock }
+                            .flatMap { it.dependencies }
+                            .toSet()
+
+                        if (mapping.dependencies.intersect(dependenciesUsed).isNotEmpty())
                         {
                             Mono.logSink("Dependencies in use, skipping")
                             continue

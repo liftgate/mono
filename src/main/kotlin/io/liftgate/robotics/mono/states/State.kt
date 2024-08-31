@@ -14,16 +14,25 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, 
     private var target: T? = null
     private var currentJob: CompletableFuture<Void>? = null
     private val lock = ReentrantReadWriteLock()
+    private var additionalPeriodic: (T, T?) -> Unit = { _, _ -> }
+
+    fun additionalPeriodic(block: (T, T?) -> Unit)
+    {
+        this.additionalPeriodic = block
+    }
 
     fun inProgress() = lock.read { currentJob != null }
 
     internal fun periodic() = lock.read {
+        val current = read()
+        additionalPeriodic(current, target)
+
         if (currentJob == null)
         {
             return
         }
 
-        if (complete(read(), target!!))
+        if (complete(current, target!!))
         {
             currentJob?.complete(null)
             currentJob = null
