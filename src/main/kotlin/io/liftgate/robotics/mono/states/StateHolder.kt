@@ -19,10 +19,11 @@ abstract class StateHolder
 
     private inline fun <reified T : Any> state(
         noinline write: (T) -> Unit,
-        noinline read: () -> T
+        noinline read: () -> T,
+        noinline complete: (T, T) -> Boolean = { one, two -> one == two }
     ) = object : ReadOnlyProperty<Any, State<T>>
     {
-        private val state = State(write, read).apply { states += this }
+        private val state = State(write, read, complete).apply { states += this }
         override fun getValue(thisRef: Any, property: KProperty<*>) = state
     }
 

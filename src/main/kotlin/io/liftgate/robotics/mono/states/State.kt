@@ -9,7 +9,7 @@ import kotlin.concurrent.write
  * @author GrowlyX
  * @since 8/31/2024
  */
-class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T)
+class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, private val complete: (T, T) -> Boolean = { one, two -> one == two })
 {
     private var target: T? = null
     private var currentJob: CompletableFuture<Void>? = null
@@ -23,7 +23,7 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T)
             return
         }
 
-        if (read() == target)
+        if (complete(read(), target!!))
         {
             currentJob?.complete(null)
             currentJob = null
