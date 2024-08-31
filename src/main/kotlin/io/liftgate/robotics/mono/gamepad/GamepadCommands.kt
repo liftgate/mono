@@ -2,6 +2,7 @@ package io.liftgate.robotics.mono.gamepad
 
 import com.qualcomm.robotcore.hardware.Gamepad
 import io.liftgate.robotics.mono.Mono
+import io.liftgate.robotics.mono.states.State
 import io.liftgate.robotics.mono.subsystem.Subsystem
 import io.liftgate.robotics.mono.subsystem.terminable.composite.CompositeTerminable
 import java.util.concurrent.ScheduledFuture
@@ -24,6 +25,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
         val handler: () -> Unit,
         val behavior: ButtonBehavior,
         val usedButtons: Set<ButtonType>,
+        val dependencies: Set<State<*>>,
         val releaseTrigger: (() -> Unit)? = null,
         var delay: Long?,
         var lastTrigger: Long = 0L,
@@ -60,6 +62,18 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
             // if the expression is true, trigger the handler.
             if (expr())
             {
+                if (mapping.dependencies.isNotEmpty())
+                {
+                    if (!mapping.lock)
+                    {
+                        if (mapping.dependencies.any { it.inProgress() })
+                        {
+                            Mono.logSink("Dependencies in use, skipping")
+                            continue
+                        }
+                    }
+                }
+
                 // if this requires a lock (sirngle-use), don't continue until it's released
                 if (mapping.behavior.requiresLock)
                 {
@@ -195,6 +209,12 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
                 build(ButtonBehavior.Single, lockRelease)
             }
 
+            val dependencies = mutableSetOf<State<*>>()
+            fun dependsOn(vararg states: State<*>)
+            {
+                dependencies += states
+            }
+
             fun build(
                 behavior: ButtonBehavior,
                 onRelease: (() -> Unit)? = null,
@@ -206,6 +226,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
                     behavior = behavior,
                     releaseTrigger = onRelease,
                     delay = delay,
+                    dependencies = dependencies,
                     usedButtons = usedButtons.toSet()
                 )
                 built = true
