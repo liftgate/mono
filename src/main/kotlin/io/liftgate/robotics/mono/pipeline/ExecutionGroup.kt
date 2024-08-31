@@ -16,10 +16,32 @@ interface ExecutionGroup : ID, Executable
         members += member
     }
 
+    fun backtrack(times: Int)
+    {
+        throw BacktrackException(times)
+    }
+
     override fun execute(level: Int, metadata: ExecutionMetadata)
     {
-        members.forEach {
-            it.timedExecution(metadata, level + 1)
+        var currentIndex = 0
+        val endIndex = members.size - 1
+        while (currentIndex <= endIndex)
+        {
+            val currentMember = members[currentIndex]
+            kotlin.runCatching {
+                currentMember.timedExecution(metadata, level + 1)
+            }.onFailure { failure ->
+                if (failure is BacktrackException)
+                {
+                    currentIndex -= failure.amount.coerceAtMost(currentIndex)
+                } else
+                {
+                    failure.printStackTrace()
+                    return
+                }
+            }.onSuccess {
+                currentIndex += 1
+            }
         }
     }
 }
