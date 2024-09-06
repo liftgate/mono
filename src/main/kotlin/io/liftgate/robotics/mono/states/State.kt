@@ -11,11 +11,14 @@ import kotlin.concurrent.write
  */
 class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, private val complete: (T, T) -> Boolean = { one, two -> one == two })
 {
+    private var current: T? = null
     private var target: T? = null
+
     private var currentJob: CompletableFuture<Void>? = null
     private val lock = ReentrantReadWriteLock()
     private var additionalPeriodic: (T, T?) -> Unit = { _, _ -> }
 
+    fun current() = current ?: throw IllegalStateException("State has not been initialized yet")
     fun additionalPeriodic(block: (T, T?) -> Unit)
     {
         this.additionalPeriodic = block
@@ -25,6 +28,8 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, 
 
     internal fun periodic() = lock.read {
         val current = read()
+        this.current = current
+
         additionalPeriodic(current, target)
 
         if (currentJob == null)

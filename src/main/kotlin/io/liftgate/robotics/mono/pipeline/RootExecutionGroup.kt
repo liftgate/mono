@@ -1,6 +1,9 @@
 package io.liftgate.robotics.mono.pipeline
 
 import io.liftgate.robotics.mono.Mono
+import java.util.concurrent.locks.ReentrantLock
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.withLock
 import kotlin.reflect.KClass
 
 /**
@@ -9,7 +12,8 @@ import kotlin.reflect.KClass
  */
 class RootExecutionGroup : ExecutionGroup
 {
-    private val metadata = ExecutionMetadata()
+    override val localLock = ReentrantReadWriteLock()
+    private val metadata = ExecutionMetadata(this)
     override val members = mutableListOf<SingleOrGroupExecution>()
 
     override val contextProviders = mutableMapOf<KClass<out StageContext>, (ExecutionMetadata) -> Any>()
@@ -34,17 +38,16 @@ class RootExecutionGroup : ExecutionGroup
     }
 
     private var hasCalledTermination = false
-    private val terminationLock = Any()
+    private val terminationLock = ReentrantLock()
 
     /**
      * Allow the program to exit mid-process without having to do
      * multithreaded magic and messing with Thread#interrupt.
      */
-    fun terminateMidExecution() = synchronized(terminationLock)
-    {
+    fun terminateMidExecution() = terminationLock.withLock {
         if (hasCalledTermination)
         {
-            return@synchronized
+            return@withLock
         }
 
         metadata["terminate"] = true

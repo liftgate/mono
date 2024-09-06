@@ -1,5 +1,8 @@
 package io.liftgate.robotics.mono.pipeline
 
+import java.util.concurrent.locks.ReentrantReadWriteLock
+import kotlin.concurrent.read
+import kotlin.concurrent.write
 import kotlin.reflect.KClass
 
 /**
@@ -8,12 +11,16 @@ import kotlin.reflect.KClass
  */
 interface ExecutionGroup : ID, Executable
 {
+    val localLock: ReentrantReadWriteLock
+
     val members: MutableList<SingleOrGroupExecution>
     val contextProviders: MutableMap<KClass<out StageContext>, (ExecutionMetadata) -> Any>
 
     operator fun plusAssign(member: SingleOrGroupExecution)
     {
-        members += member
+        localLock.write {
+            members += member
+        }
     }
 
     fun backtrack(times: Int)
@@ -23,24 +30,27 @@ interface ExecutionGroup : ID, Executable
 
     override fun execute(level: Int, metadata: ExecutionMetadata)
     {
-        var currentIndex = 0
-        val endIndex = members.size - 1
-        while (currentIndex <= endIndex)
-        {
-            val currentMember = members[currentIndex]
-            kotlin.runCatching {
-                currentMember.timedExecution(metadata, level + 1)
-            }.onFailure { failure ->
-                if (failure is BacktrackException)
-                {
-                    currentIndex -= failure.amount.coerceAtMost(currentIndex)
-                } else
-                {
-                    failure.printStackTrace()
-                    return
+        localLock.read {
+            var currentIndex = 0
+            val endIndex = members.size - 1
+            while (currentIndex <= endIndex && !metadata.containsKey("terminate"))
+            {
+                val currentMember = members[currentIndex]
+                kotlin.runCatching {
+                    currentMember.timedExecution(metadata, level + 1)
+                }.onFailure { failure ->
+                    if (failure is BacktrackException)
+                    {
+                        currentIndex -= failure.amount.coerceAtMost(currentIndex)
+                    } else
+                    {
+                        metadata.parent.terminateMidExecution()
+                        failure.printStackTrace()
+                        return
+                    }
+                }.onSuccess {
+                    currentIndex += 1
                 }
-            }.onSuccess {
-                currentIndex += 1
             }
         }
     }

@@ -1,5 +1,7 @@
 package io.liftgate.robotics.mono.pipeline
 
+import java.util.concurrent.locks.ReentrantReadWriteLock
+
 /**
  * @author GrowlyX
  * @since 10/22/2023
@@ -62,6 +64,8 @@ fun ExecutionGroup.single(id: String, lambda: ExecutionMetadata.() -> Unit) =
 fun ParallelExecutionGroup.consecutive(id: String, block: ExecutionGroup.() -> Unit) =
     with(__INTERNAL__wrap(object : ExecutionGroup
     {
+        override val localLock = ReentrantReadWriteLock()
+
         override val members = mutableListOf<SingleOrGroupExecution>()
         override val contextProviders = this@consecutive.contextProviders.toMutableMap()
 
@@ -79,6 +83,8 @@ fun ParallelExecutionGroup.consecutive(id: String, block: ExecutionGroup.() -> U
 fun ExecutionGroup.simultaneous(id: String, block: ParallelExecutionGroup.() -> Unit) =
     with(__INTERNAL__wrap(object : ParallelExecutionGroup
     {
+        override val localLock = ReentrantReadWriteLock()
+
         override val members = mutableListOf<SingleOrGroupExecution>()
         override fun id() = id
 

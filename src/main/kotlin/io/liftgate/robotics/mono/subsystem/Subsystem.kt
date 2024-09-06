@@ -11,4 +11,7 @@ interface Subsystem : StageContext, CompositeTerminable
 {
     fun initialize()
     fun composeStageContext(): StageContext
+    {
+        throw Error("Un implemented")
+    }
 }
