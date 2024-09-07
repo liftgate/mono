@@ -3,6 +3,7 @@ package io.liftgate.robotics.mono.gamepad
 import com.qualcomm.robotcore.hardware.Gamepad
 import io.liftgate.robotics.mono.Mono
 import io.liftgate.robotics.mono.states.State
+import io.liftgate.robotics.mono.subsystem.AbstractSubsystem
 import io.liftgate.robotics.mono.subsystem.Subsystem
 import io.liftgate.robotics.mono.subsystem.terminable.composite.CompositeTerminable
 import java.util.concurrent.ScheduledFuture
@@ -12,8 +13,7 @@ import java.util.concurrent.TimeUnit
  * @author GrowlyX
  * @since 9/4/2023
  */
-class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runnable, Subsystem,
-    CompositeTerminable by CompositeTerminable.create()
+class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runnable, AbstractSubsystem()
 {
     enum class ButtonBehavior(val requiresLock: Boolean = false)
     {
@@ -245,7 +245,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
         manualUpdates = true
     }
 
-    override fun initialize()
+    override fun doInitialize()
     {
         if (manualUpdates)
         {
