@@ -7,6 +7,10 @@ package io.liftgate.robotics.mono.pipeline
 interface StageContext
 {
     fun isCompleted(): Boolean
+    {
+        return false
+    }
+
     fun timesOutAfter(): Long?
     {
         return null
