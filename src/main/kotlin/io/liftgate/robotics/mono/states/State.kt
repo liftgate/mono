@@ -14,7 +14,10 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, 
     private var current: T? = null
     private var target: T? = null
 
-    private var currentJob: CompletableFuture<Void>? = null
+    private var currentJob: CompletableFuture<StateResult>? = null
+    private var currentJobStart: Long = System.currentTimeMillis()
+    private var currentJobTimeOut: Long = 0L
+
     private val lock = ReentrantReadWriteLock()
     private var additionalPeriodic: (T, T?) -> Unit = { _, _ -> }
 
@@ -39,13 +42,21 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, 
 
         if (complete(current, target!!))
         {
-            currentJob?.complete(null)
+            currentJob?.complete(StateResult.Success)
             currentJob = null
             target = null
+        } else if (currentJobTimeOut != 0L)
+        {
+            if (System.currentTimeMillis() - currentJobStart > currentJobTimeOut)
+            {
+                currentJob?.complete(StateResult.Timeout)
+                currentJob = null
+                target = null
+            }
         }
     }
 
-    fun deploy(newValue: T): CompletableFuture<Void>? = lock.write {
+    fun deploy(newValue: T, timeout: Long = 0L): CompletableFuture<StateResult>? = lock.write {
         if (currentJob != null)
         {
             return null
@@ -53,18 +64,20 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, 
 
         currentJob = CompletableFuture()
         target = newValue
+        currentJobStart = System.currentTimeMillis()
+        currentJobTimeOut = timeout
 
         write(newValue)
         return currentJob!!
     }
 
-    fun override(newValue: T): CompletableFuture<Void> = lock.write {
+    fun override(newValue: T, timeout: Long = 0L): CompletableFuture<StateResult> = lock.write {
         if (currentJob != null)
         {
             reset()
         }
 
-        return deploy(newValue)!!
+        return deploy(newValue, timeout)!!
     }
 
     fun reset() = lock.write {
