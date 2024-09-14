@@ -4,12 +4,13 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
     `maven-publish`
     java
-    kotlin("jvm") version "1.9.10"
+    kotlin("jvm") version "2.0.20"
+    kotlin("plugin.serialization") version "2.0.20"
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 group = "io.liftgate.robotics.mono"
-version = "4.1-SNAPSHOT"
+version = "5.1-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -18,6 +19,7 @@ repositories {
 dependencies {
     compileOnly(kotlin("stdlib"))
     compileOnly(fileTree("RobotCore"))
+    api("com.charleskorn.kaml:kaml:0.61.0")
     testImplementation(kotlin("test"))
 }
 
