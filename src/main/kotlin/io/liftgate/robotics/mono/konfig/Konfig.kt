@@ -4,6 +4,7 @@ import com.charleskorn.kaml.Yaml
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
+import org.firstinspires.ftc.robotcore.internal.system.AppUtil
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.BasicFileAttributes
@@ -36,7 +37,8 @@ class Konfig<T : Any>(
 )
 {
     private val configPath by lazy {
-        File("konfig-$name.yml")
+        AppUtil.getInstance()
+            .getSettingsFile("konfig-$name.yml")
     }
 
     private var recentlyModified = false
