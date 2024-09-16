@@ -30,7 +30,7 @@ inline fun <reified T : Any> LinearOpMode.konfig(configure: Konfig<T>.() -> Unit
 class Konfig<T : Any>(
     private val opMode: LinearOpMode,
     private val type: KClass<T>,
-    private val name: String = type.simpleName?.lowercase() ?: "unknown",
+    private var name: String = type.simpleName?.lowercase() ?: "unknown",
     private val defaultCreator: () -> T,
     private val existingCreator: (String) -> T,
     private val existingPersist: (T) -> String
@@ -65,6 +65,11 @@ class Konfig<T : Any>(
         }
 
         started = true
+    }
+
+    fun withCustomFileID(name: String)
+    {
+        this.name = name
     }
 
     private var postReloadBlock: T.() -> Unit = { }
