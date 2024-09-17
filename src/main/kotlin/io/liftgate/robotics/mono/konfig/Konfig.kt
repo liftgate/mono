@@ -1,6 +1,8 @@
 package io.liftgate.robotics.mono.konfig
 
+import com.charleskorn.kaml.AmbiguousQuoteStyle
 import com.charleskorn.kaml.Yaml
+import com.charleskorn.kaml.YamlConfiguration
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -11,7 +13,10 @@ import java.nio.file.attribute.BasicFileAttributes
 import kotlin.concurrent.thread
 import kotlin.reflect.KClass
 
-val yaml = Yaml()
+val yaml = Yaml(configuration = YamlConfiguration(
+    ambiguousQuoteStyle = AmbiguousQuoteStyle.SingleQuoted
+))
+
 inline fun <reified T : Any> LinearOpMode.konfig(configure: Konfig<T>.() -> Unit = { }) = Konfig(
     this, T::class,
     defaultCreator = { T::class.java.newInstance() },
