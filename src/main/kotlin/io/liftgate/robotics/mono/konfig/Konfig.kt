@@ -1,6 +1,7 @@
 package io.liftgate.robotics.mono.konfig
 
 import com.charleskorn.kaml.AmbiguousQuoteStyle
+import com.charleskorn.kaml.SingleLineStringStyle
 import com.charleskorn.kaml.Yaml
 import com.charleskorn.kaml.YamlConfiguration
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
@@ -14,7 +15,8 @@ import kotlin.concurrent.thread
 import kotlin.reflect.KClass
 
 val yaml = Yaml(configuration = YamlConfiguration(
-    ambiguousQuoteStyle = AmbiguousQuoteStyle.SingleQuoted
+    ambiguousQuoteStyle = AmbiguousQuoteStyle.SingleQuoted,
+    singleLineStringStyle = SingleLineStringStyle.PlainExceptAmbiguous
 ))
 
 inline fun <reified T : Any> LinearOpMode.konfig(configure: Konfig<T>.() -> Unit = { }) = Konfig(
