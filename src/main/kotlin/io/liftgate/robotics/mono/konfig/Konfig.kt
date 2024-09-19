@@ -1,6 +1,9 @@
 package io.liftgate.robotics.mono.konfig
 
+import com.charleskorn.kaml.AmbiguousQuoteStyle
+import com.charleskorn.kaml.SingleLineStringStyle
 import com.charleskorn.kaml.Yaml
+import com.charleskorn.kaml.YamlConfiguration
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -11,9 +14,13 @@ import java.nio.file.attribute.BasicFileAttributes
 import kotlin.concurrent.thread
 import kotlin.reflect.KClass
 
-val yaml = Yaml()
-inline fun <reified T : Any> LinearOpMode.konfig(configure: Konfig<T>.() -> Unit = { }) = Konfig(
-    this, T::class,
+val yaml = Yaml(configuration = YamlConfiguration(
+    ambiguousQuoteStyle = AmbiguousQuoteStyle.SingleQuoted,
+    singleLineStringStyle = SingleLineStringStyle.PlainExceptAmbiguous
+))
+
+inline fun <reified T : Any> konfig(configure: Konfig<T>.() -> Unit = { }) = Konfig(
+    T::class,
     defaultCreator = { T::class.java.newInstance() },
     existingCreator = {
         yaml.decodeFromString(it)
@@ -28,9 +35,8 @@ inline fun <reified T : Any> LinearOpMode.konfig(configure: Konfig<T>.() -> Unit
  * @since 9/14/2024
  */
 class Konfig<T : Any>(
-    private val opMode: LinearOpMode,
     private val type: KClass<T>,
-    private val name: String = type.simpleName?.lowercase() ?: "unknown",
+    private var name: String = type.simpleName?.lowercase() ?: "unknown",
     private val defaultCreator: () -> T,
     private val existingCreator: (String) -> T,
     private val existingPersist: (T) -> String
@@ -41,11 +47,7 @@ class Konfig<T : Any>(
             .getSettingsFile("konfig-$name.yml")
     }
 
-    private var recentlyModified = false
-    private var lastModificationTimestamp = 0L
-
     private lateinit var cached: T
-
     private var started = false
 
     fun start()
@@ -56,21 +58,12 @@ class Konfig<T : Any>(
         }
 
         load()
-        thread {
-            while (!opMode.isStopRequested)
-            {
-                autoScan()
-                Thread.sleep(100L)
-            }
-        }
-
         started = true
     }
 
-    private var postReloadBlock: T.() -> Unit = { }
-    fun onHotReload(block: T.() -> Unit)
+    fun withCustomFileID(name: String)
     {
-        postReloadBlock = block
+        this.name = name
     }
 
     fun get() = cached
@@ -93,45 +86,5 @@ class Konfig<T : Any>(
         }
 
         cached = existing
-    }
-
-    private fun autoScan()
-    {
-        kotlin.runCatching {
-            val fileAttributes = Files
-                .readAttributes(
-                    this.configPath.toPath(),
-                    BasicFileAttributes::class.java
-                )
-
-            val lastModified =
-                fileAttributes
-                    .lastModifiedTime()
-                    .toMillis()
-
-            if (this.lastModificationTimestamp == 0L)
-            {
-                this.lastModificationTimestamp = lastModified
-                return
-            }
-
-            if (
-                this.recentlyModified &&
-                this.lastModificationTimestamp != lastModified
-            )
-            {
-                this.recentlyModified = false
-                this.lastModificationTimestamp = lastModified
-                return
-            }
-
-            if (lastModified != this.lastModificationTimestamp)
-            {
-                load()
-                postReloadBlock(cached)
-            }
-
-            this.lastModificationTimestamp = lastModified
-        }
     }
 }
