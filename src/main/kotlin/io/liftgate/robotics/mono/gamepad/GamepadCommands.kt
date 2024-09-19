@@ -265,8 +265,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
     override fun dispose() = with(this) {
         if (!manualUpdates)
         {
-            checkNotNull(future)
-            future!!.cancel(true)
+            future?.cancel(true)
             future = null
         }
     }
