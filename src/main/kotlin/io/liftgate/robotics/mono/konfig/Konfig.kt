@@ -16,7 +16,9 @@ import kotlin.reflect.KClass
 
 val yaml = Yaml(configuration = YamlConfiguration(
     ambiguousQuoteStyle = AmbiguousQuoteStyle.SingleQuoted,
-    singleLineStringStyle = SingleLineStringStyle.PlainExceptAmbiguous
+    singleLineStringStyle = SingleLineStringStyle.PlainExceptAmbiguous,
+    strictMode = false,
+    encodeDefaults = true
 ))
 
 inline fun <reified T : Any> konfig(configure: Konfig<T>.() -> Unit = { }) = Konfig(
@@ -43,12 +45,18 @@ class Konfig<T : Any>(
 )
 {
     private val configPath by lazy {
+        if (local)
+        {
+            return@lazy File("konfig", "$name.yml")
+        }
+
         AppUtil.getInstance()
-            .getSettingsFile("konfig-$name.yml")
+            .getSettingsFile("$name.yml")
     }
 
     private lateinit var cached: T
     private var started = false
+    private var local = false
 
     fun start()
     {
@@ -64,6 +72,11 @@ class Konfig<T : Any>(
     fun withCustomFileID(name: String)
     {
         this.name = name
+    }
+
+    fun local()
+    {
+        this.local = true
     }
 
     fun get() = cached
