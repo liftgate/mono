@@ -262,6 +262,11 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
         }
     }
 
+    override fun start()
+    {
+
+    }
+
     override fun dispose() = with(this) {
         if (!manualUpdates)
         {
