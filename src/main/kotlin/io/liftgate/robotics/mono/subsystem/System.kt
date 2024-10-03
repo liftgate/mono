@@ -13,6 +13,9 @@ interface System : TerminableModule
     fun initializeAll() = subsystems
         .onEach(Subsystem::initialize)
 
+    fun startAll() = subsystems
+        .onEach(Subsystem::start)
+
     fun disposeOfAll() = subsystems.onEach(
         Subsystem::closeAndReportException
     )

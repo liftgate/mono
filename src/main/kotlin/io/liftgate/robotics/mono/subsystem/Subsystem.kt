@@ -10,6 +10,7 @@ import io.liftgate.robotics.mono.subsystem.terminable.composite.CompositeTermina
 interface Subsystem : StageContext, CompositeTerminable
 {
     fun initialize()
+    fun start()
     fun composeStageContext(): StageContext
     {
         throw Error("Un implemented")
