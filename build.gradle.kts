@@ -10,8 +10,8 @@ plugins {
     id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
-group = "io.liftgate.robotics.mono"
-version = "6.4-SNAPSHOT"
+group = "io.liftgate.robotics"
+version = "7.0-R1"
 
 repositories {
     mavenCentral()

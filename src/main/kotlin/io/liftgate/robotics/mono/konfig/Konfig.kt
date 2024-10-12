@@ -8,10 +8,10 @@ import java.io.File
 import kotlin.reflect.KClass
 
 val yaml = Yaml {
-    stringSerialization = YamlBuilder.StringSerialization.DOUBLE_QUOTATION
+    stringSerialization = YamlBuilder.StringSerialization.SINGLE_QUOTATION
     encodeDefaultValues = true
     nullSerialization = YamlBuilder.NullSerialization.NULL
-    mapSerialization = YamlBuilder.MapSerialization.FLOW_MAP
+    mapSerialization = YamlBuilder.MapSerialization.BLOCK_MAP
 }
 
 inline fun <reified T : Any> konfig(configure: Konfig<T>.() -> Unit = { }) = Konfig(
