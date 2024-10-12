@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "io.liftgate.robotics.mono"
-version = "6.3-SNAPSHOT"
+version = "6.4-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -20,7 +20,7 @@ repositories {
 dependencies {
     compileOnly(kotlin("stdlib"))
     compileOnly(fileTree("RobotCore"))
-    compileOnly("com.charleskorn.kaml:kaml:0.61.0")
+    compileOnly("net.mamoe.yamlkt:yamlkt:0.13.0")
     testImplementation(kotlin("test"))
 }
 

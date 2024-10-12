@@ -1,25 +1,18 @@
 package io.liftgate.robotics.mono.konfig
 
-import com.charleskorn.kaml.AmbiguousQuoteStyle
-import com.charleskorn.kaml.SingleLineStringStyle
-import com.charleskorn.kaml.Yaml
-import com.charleskorn.kaml.YamlConfiguration
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
+import net.mamoe.yamlkt.Yaml
+import net.mamoe.yamlkt.YamlBuilder
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.attribute.BasicFileAttributes
-import kotlin.concurrent.thread
 import kotlin.reflect.KClass
 
-val yaml = Yaml(configuration = YamlConfiguration(
-    ambiguousQuoteStyle = AmbiguousQuoteStyle.SingleQuoted,
-    singleLineStringStyle = SingleLineStringStyle.PlainExceptAmbiguous,
-    strictMode = false,
-    encodeDefaults = true
-))
+val yaml = Yaml {
+    stringSerialization = YamlBuilder.StringSerialization.DOUBLE_QUOTATION
+    encodeDefaultValues = true
+    nullSerialization = YamlBuilder.NullSerialization.NULL
+    mapSerialization = YamlBuilder.MapSerialization.FLOW_MAP
+}
 
 inline fun <reified T : Any> konfig(configure: Konfig<T>.() -> Unit = { }) = Konfig(
     T::class,
@@ -91,13 +84,7 @@ class Konfig<T : Any>(
             return
         }
 
-        val existing = runCatching {
-            existingCreator(configPath.readText())
-        }.getOrElse {
-            it.printStackTrace()
-            defaultCreator()
-        }
-
+        val existing = existingCreator(configPath.readText())
         cached = existing
     }
 }
