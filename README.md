@@ -1,9 +1,27 @@
 <img src="mono.png" align="middle">
+<p align="center">An intuitive Kotlin library that accelerates FTC software development.</p><br>
 
-Mono is an internal library that handles FTC control systems.
+# Install:
+In `FtcRobotController` -> `build.gradle`:
+```groovy
+repositories {
+  maven { url = "https://oss.liftgate.io/artifactory/opensource" }
+}
+
+dependencies {
+  ...
+  api("io.liftgate.robotics:ftc-monolib:7.0-R1")
+  api("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.2")
+  api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2")
+  api("net.mamoe.yamlkt:yamlkt:0.13.0")
+}
+```
+
+# Includes:
 - Autonomous structuring/state machines
 - Driver control gamepad button mapping
 - Robot hardware modularization with Subsystems
+- Persistent file-based configurations (`Mono Konfig`)
 
 ### State machines:
 State machines are used in autonomous implementations to plan out chains of tasks our robot takes *(execution groups)*. You need to know three key terms to understand our autonomous programs:
@@ -140,4 +158,5 @@ class AirplaneLauncher(private val opMode: LinearOpMode) : AbstractSubsystem()
 }
 ```
 
-
+### Konfig
+Coming soon!
