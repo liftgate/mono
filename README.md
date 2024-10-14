@@ -1,4 +1,5 @@
-## Mono
+<img src="mono.png" align="middle">
+
 Mono is an internal library that handles FTC control systems.
 - Autonomous structuring/state machines
 - Driver control gamepad button mapping
