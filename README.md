@@ -1,5 +1,5 @@
 <img src="mono.png" align="middle">
-<p align="center">An intuitive Kotlin library that accelerates FTC software development.</p>
+<p align="center">An intuitive Kotlin library that accelerates FTC software development.</p><br>
 # Install
 In `FtcRobotController` -> `build.gradle`:
 ```groovy
