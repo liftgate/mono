@@ -4,8 +4,7 @@ import com.qualcomm.robotcore.hardware.Gamepad
 import io.liftgate.robotics.mono.Mono
 import io.liftgate.robotics.mono.states.State
 import io.liftgate.robotics.mono.subsystem.AbstractSubsystem
-import io.liftgate.robotics.mono.subsystem.Subsystem
-import io.liftgate.robotics.mono.subsystem.terminable.composite.CompositeTerminable
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ScheduledFuture
 import java.util.concurrent.TimeUnit
 
@@ -32,7 +31,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
         var lock: Boolean = false,
     )
 
-    private val listeners = mutableMapOf<() -> Boolean, ButtonMapping>()
+    internal val listeners = ConcurrentHashMap<() -> Boolean, ButtonMapping>()
     private var future: ScheduledFuture<*>? = null
 
     fun where(base: ButtonType) = ButtonMappingBuilder(usedButtons = mutableSetOf(base)) { isActive(base) }
@@ -47,6 +46,7 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
     fun whereDynamicEQ(base: ButtonDynamic, target: Float) = doBuild(base) { it == target }
 
     fun whereDynamicInRange(base: ButtonDynamic, range: IntRange) = doBuild(base) { it.toInt() in range }
+    fun toBundle() = CommandBundle.from(this)
 
     override fun run()
     {
