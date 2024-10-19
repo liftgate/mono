@@ -20,6 +20,8 @@ interface System : TerminableModule
         Subsystem::closeAndReportException
     )
 
+    fun periodicAll() = subsystems.forEach(Subsystem::periodic)
+
     override fun setup(consumer: TerminableConsumer)
     {
         val subsystem = consumer as Subsystem

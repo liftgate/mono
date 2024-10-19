@@ -11,6 +11,12 @@ interface Subsystem : StageContext, CompositeTerminable
 {
     fun initialize()
     fun start()
+
+    fun periodic()
+    {
+
+    }
+
     fun composeStageContext(): StageContext
     {
         throw Error("Un implemented")
