@@ -73,7 +73,6 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
 
                         if (mapping.dependencies.intersect(dependenciesUsed).isNotEmpty())
                         {
-                            Mono.logSink("Dependencies in use, skipping")
                             continue
                         }
                     }
@@ -84,7 +83,6 @@ class GamepadCommands internal constructor(private val gamepad: Gamepad) : Runna
                 {
                     if (mapping.lock)
                     {
-                        Mono.logSink("Locking")
                         continue
                     }
                 }
