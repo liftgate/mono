@@ -37,16 +37,6 @@ class Konfig<T : Any>(
     private val existingPersist: (T) -> String
 )
 {
-    private val configPath by lazy {
-        if (local)
-        {
-            return@lazy File("konfig", "$name.yml")
-        }
-
-        AppUtil.getInstance()
-            .getSettingsFile("$name.yml")
-    }
-
     private lateinit var cached: T
     private var started = false
     private var local = false
@@ -76,15 +66,27 @@ class Konfig<T : Any>(
 
     private fun load()
     {
+        println("Loading Konfig file $name.yml (local=$local)")
+        val configPath = if (local)
+        {
+            File("konfig", "$name.yml")
+        } else
+        {
+            AppUtil.getInstance()
+                .getSettingsFile("$name.yml")
+        }
+
         if (!configPath.exists())
         {
             cached = defaultCreator()
             configPath.createNewFile()
             configPath.writeText(existingPersist(cached))
+            println("Created a new Konfig instance as none exists $name.yml.")
             return
         }
 
         val existing = existingCreator(configPath.readText())
         cached = existing
+        println("Pulling data from existing konfig file $name.yml.")
     }
 }
