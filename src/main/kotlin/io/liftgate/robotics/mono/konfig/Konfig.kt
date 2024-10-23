@@ -7,22 +7,10 @@ import org.firstinspires.ftc.robotcore.internal.system.AppUtil
 import java.io.File
 import kotlin.reflect.KClass
 
-val yaml = Yaml {
-    stringSerialization = YamlBuilder.StringSerialization.SINGLE_QUOTATION
-    encodeDefaultValues = true
-    nullSerialization = YamlBuilder.NullSerialization.NULL
-    mapSerialization = YamlBuilder.MapSerialization.BLOCK_MAP
-}
-
 inline fun <reified T : Any> konfig(configure: Konfig<T>.() -> Unit = { }) = Konfig(
     T::class,
     defaultCreator = { T::class.java.newInstance() },
-    existingCreator = {
-        yaml.decodeFromString(it)
-    },
-    existingPersist = {
-        yaml.encodeToString(it)
-    }
+    existingCreator = { yaml, contents -> yaml.decodeFromString(contents) }
 ).apply(configure).apply { start() }
 
 /**
@@ -33,10 +21,16 @@ class Konfig<T : Any>(
     private val type: KClass<T>,
     private var name: String = type.simpleName?.lowercase() ?: "unknown",
     private val defaultCreator: () -> T,
-    private val existingCreator: (String) -> T,
-    private val existingPersist: (T) -> String
+    private val existingCreator: (Yaml, String) -> T,
 )
 {
+    val yaml = Yaml {
+        stringSerialization = YamlBuilder.StringSerialization.SINGLE_QUOTATION
+        encodeDefaultValues = true
+        nullSerialization = YamlBuilder.NullSerialization.NULL
+        mapSerialization = YamlBuilder.MapSerialization.BLOCK_MAP
+    }
+
     private lateinit var cached: T
     private var started = false
     private var local = false
@@ -80,12 +74,14 @@ class Konfig<T : Any>(
         {
             cached = defaultCreator()
             configPath.createNewFile()
-            configPath.writeText(existingPersist(cached))
+            configPath.writeText(yaml.encodeToString(cached))
             println("Created a new Konfig instance as none exists $name.yml.")
             return
         }
 
-        val existing = existingCreator(configPath.readText())
+        val existing = existingCreator(yaml, configPath.readText())
+        println("CONTENTS FOR $name.yml == ${configPath.readText()}")
+        println("DESERIALIZED $existing")
         cached = existing
         println("Pulling data from existing konfig file $name.yml.")
     }
