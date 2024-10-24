@@ -57,7 +57,6 @@ class Konfig<T : Any>(
 
     private fun load()
     {
-        println("Loading Konfig file $name.json (local=$local)")
         val configPath = if (local)
         {
             File("konfig", "$name.json")
@@ -71,14 +70,10 @@ class Konfig<T : Any>(
             cached = defaultCreator()
             configPath.createNewFile()
             configPath.writeText(gson.toJson(cached))
-            println("Created a new Konfig instance as none exists $name.json.")
             return
         }
 
         val existing = existingCreator(gson, configPath.readText())
-        println("CONTENTS FOR $name.yml == ${configPath.readText()}")
-        println("DESERIALIZED $existing")
         cached = existing
-        println("Pulling data from existing konfig file $name.yml.")
     }
 }

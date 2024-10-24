@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "io.liftgate.robotics"
-version = "7.8-R1"
+version = "7.9-R1"
 
 repositories {
     mavenCentral()

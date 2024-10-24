@@ -10,10 +10,7 @@ repositories {
 
 dependencies {
   ...
-  api("io.liftgate.robotics:ftc-monolib:7.0-R1")
-  api("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.2")
-  api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2")
-  api("net.mamoe.yamlkt:yamlkt:0.13.0")
+  api("io.liftgate.robotics:ftc-monolib:7.9-R1")
 }
 ```
 
