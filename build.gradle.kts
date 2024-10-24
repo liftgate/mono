@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "io.liftgate.robotics"
-version = "7.7-R1"
+version = "7.8-R1"
 
 repositories {
     mavenCentral()
@@ -20,7 +20,7 @@ repositories {
 dependencies {
     compileOnly(kotlin("stdlib"))
     compileOnly(fileTree("RobotCore"))
-    compileOnly("net.mamoe.yamlkt:yamlkt:0.13.0")
+    compileOnly("com.google.code.gson:gson:2.10.1")
     testImplementation(kotlin("test"))
 }
 

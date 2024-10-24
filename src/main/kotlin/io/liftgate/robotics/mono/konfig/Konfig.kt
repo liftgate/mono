@@ -1,8 +1,7 @@
 package io.liftgate.robotics.mono.konfig
 
-import kotlinx.serialization.decodeFromString
-import net.mamoe.yamlkt.Yaml
-import net.mamoe.yamlkt.YamlBuilder
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import org.firstinspires.ftc.robotcore.internal.system.AppUtil
 import java.io.File
 import kotlin.reflect.KClass
@@ -10,7 +9,7 @@ import kotlin.reflect.KClass
 inline fun <reified T : Any> konfig(configure: Konfig<T>.() -> Unit = { }) = Konfig(
     T::class,
     defaultCreator = { T::class.java.newInstance() },
-    existingCreator = { yaml, contents -> yaml.decodeFromString(contents) }
+    existingCreator = { yaml, contents -> yaml.fromJson(contents, T::class.java) }
 ).apply(configure).apply { start() }
 
 /**
@@ -21,15 +20,13 @@ class Konfig<T : Any>(
     private val type: KClass<T>,
     private var name: String = type.simpleName?.lowercase() ?: "unknown",
     private val defaultCreator: () -> T,
-    private val existingCreator: (Yaml, String) -> T,
+    private val existingCreator: (Gson, String) -> T,
 )
 {
-    val yaml = Yaml {
-        stringSerialization = YamlBuilder.StringSerialization.SINGLE_QUOTATION
-        encodeDefaultValues = true
-        nullSerialization = YamlBuilder.NullSerialization.NULL
-        mapSerialization = YamlBuilder.MapSerialization.BLOCK_MAP
-    }
+    val gson = GsonBuilder()
+        .setPrettyPrinting()
+        .serializeNulls()
+        .create()
 
     private lateinit var cached: T
     private var started = false
@@ -60,26 +57,25 @@ class Konfig<T : Any>(
 
     private fun load()
     {
-        println("Loading Konfig file $name.yml (local=$local)")
+        println("Loading Konfig file $name.json (local=$local)")
         val configPath = if (local)
         {
-            File("konfig", "$name.yml")
+            File("konfig", "$name.json")
         } else
         {
-            AppUtil.getInstance()
-                .getSettingsFile("$name.yml")
+            AppUtil.getInstance().getSettingsFile("$name.json")
         }
 
         if (!configPath.exists())
         {
             cached = defaultCreator()
             configPath.createNewFile()
-            configPath.writeText(yaml.encodeToString(cached))
-            println("Created a new Konfig instance as none exists $name.yml.")
+            configPath.writeText(gson.toJson(cached))
+            println("Created a new Konfig instance as none exists $name.json.")
             return
         }
 
-        val existing = existingCreator(yaml, configPath.readText())
+        val existing = existingCreator(gson, configPath.readText())
         println("CONTENTS FOR $name.yml == ${configPath.readText()}")
         println("DESERIALIZED $existing")
         cached = existing
