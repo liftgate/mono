@@ -18,7 +18,6 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, 
     private var currentJobStart: Long = System.currentTimeMillis()
     private var currentJobTimeOut: Long = 0L
 
-    private val lock = ReentrantReadWriteLock()
     private var additionalPeriodic: (T, T?) -> Unit = { _, _ -> }
 
     fun current() = current ?: throw IllegalStateException("State has not been initialized yet")
@@ -27,9 +26,9 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, 
         this.additionalPeriodic = block
     }
 
-    fun inProgress() = lock.read { currentJob != null }
+    fun inProgress() = currentJob != null
 
-    internal fun periodic() = lock.read {
+    internal fun periodic() {
         val current = read()
         this.current = current
 
@@ -56,22 +55,22 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, 
         }
     }
 
-    fun deploy(newValue: T, timeout: Long = 0L): CompletableFuture<StateResult>? = lock.write {
+    fun deploy(newValue: T, timeout: Long = 0L): CompletableFuture<StateResult>? {
         if (currentJob != null)
         {
             return null
         }
 
+        write(newValue)
+
         currentJob = CompletableFuture()
         target = newValue
         currentJobStart = System.currentTimeMillis()
         currentJobTimeOut = timeout
-
-        write(newValue)
         return currentJob!!
     }
 
-    fun override(newValue: T, timeout: Long = 0L): CompletableFuture<StateResult> = lock.write {
+    fun override(newValue: T, timeout: Long = 0L): CompletableFuture<StateResult> {
         if (currentJob != null)
         {
             reset()
@@ -80,7 +79,7 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, 
         return deploy(newValue, timeout)!!
     }
 
-    fun reset() = lock.write {
+    fun reset() {
         currentJob?.completeExceptionally(StateCancelException())
         currentJob = null
         target = null

@@ -57,13 +57,9 @@ class Konfig<T : Any>(
 
     private fun load()
     {
-        val configPath = if (local)
-        {
-            File("konfig", "$name.json")
-        } else
-        {
-            AppUtil.getInstance().getSettingsFile("$name.json")
-        }
+        val configPath = AppUtil.getInstance().getSettingsFile("$name.json")
+        println(configPath.name)
+        println(configPath.exists())
 
         if (!configPath.exists())
         {
@@ -73,7 +69,10 @@ class Konfig<T : Any>(
             return
         }
 
-        val existing = existingCreator(gson, configPath.readText())
+        val text = configPath.readText()
+        println("text: ${text}")
+
+        val existing = existingCreator(gson, text)
         cached = existing
     }
 }
