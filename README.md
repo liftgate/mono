@@ -10,7 +10,7 @@ repositories {
 
 dependencies {
   ...
-  api("io.liftgate.robotics:ftc-monolib:7.9-R1")
+  api("io.liftgate.robotics:ftc-monolib:8.0-R1")
 }
 ```
 
