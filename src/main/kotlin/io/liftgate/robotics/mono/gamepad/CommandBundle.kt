@@ -21,4 +21,9 @@ class CommandBundle(
         commands.listeners.clear()
         commands.listeners += listeners
     }
+
+    fun appendTo(commands: GamepadCommands)
+    {
+        commands.listeners += listeners
+    }
 }
