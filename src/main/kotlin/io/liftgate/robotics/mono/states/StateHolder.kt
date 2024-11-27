@@ -12,8 +12,9 @@ abstract class StateHolder
     val states = mutableSetOf<State<*>>()
     fun allPeriodic()
     {
-        states.forEach {
-            it.periodic()
+        for (state in states)
+        {
+            state.periodic()
         }
     }
 

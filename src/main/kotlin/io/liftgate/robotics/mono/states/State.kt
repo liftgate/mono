@@ -1,8 +1,10 @@
 package io.liftgate.robotics.mono.states
 
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.locks.ReentrantLock
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.concurrent.read
+import kotlin.concurrent.withLock
 import kotlin.concurrent.write
 
 /**
@@ -56,31 +58,43 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, 
     }
 
     fun deploy(newValue: T, timeout: Long = 0L): CompletableFuture<StateResult>? {
-        if (currentJob != null)
-        {
-            return null
+        kotlin.runCatching {
+            if (currentJob != null)
+            {
+                return null
+            }
+
+            write(newValue)
+
+            currentJob = CompletableFuture()
+            target = newValue
+            currentJobStart = System.currentTimeMillis()
+            currentJobTimeOut = timeout
+        }.onFailure {
+            it.printStackTrace()
         }
-
-        write(newValue)
-
-        currentJob = CompletableFuture()
-        target = newValue
-        currentJobStart = System.currentTimeMillis()
-        currentJobTimeOut = timeout
         return currentJob!!
     }
 
     fun override(newValue: T, timeout: Long = 0L): CompletableFuture<StateResult> {
-        if (currentJob != null)
-        {
-            reset()
+        kotlin.runCatching {
+            if (currentJob != null)
+            {
+                reset()
+            }
+        }.onFailure {
+            it.printStackTrace()
         }
 
-        return deploy(newValue, timeout)!!
+        return deploy(newValue, timeout) ?: CompletableFuture.completedFuture(null)
     }
 
     fun reset() {
-        currentJob?.completeExceptionally(StateCancelException())
+        kotlin.runCatching {
+            currentJob?.completeExceptionally(StateCancelException())
+        }.onFailure {
+            it.printStackTrace()
+        }
         currentJob = null
         target = null
     }

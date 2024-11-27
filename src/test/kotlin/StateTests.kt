@@ -1,5 +1,6 @@
 import io.liftgate.robotics.mono.states.StateHolder
 import org.junit.jupiter.api.Test
+import java.util.concurrent.CompletableFuture
 import kotlin.concurrent.thread
 
 /**
@@ -11,12 +12,31 @@ class StateTests : StateHolder()
     var variable = 0
     val state by state(
         {
-            variable = it / 2
+            variable = 0
         },
         {
+            variable
+        },
+        { one, two ->
             variable += 1
             println("Variable: $variable")
-            variable
+            one == two
+        }
+    )
+
+
+    var fastVariable = 0
+    val fastState by state(
+        {
+            fastVariable = 0
+        },
+        {
+            fastVariable
+        },
+        { one, two ->
+            fastVariable += 1
+            println("Fast variable: $fastVariable")
+            one == two
         }
     )
 
@@ -37,11 +57,25 @@ class StateTests : StateHolder()
         }
 
         println("deploying...")
-        state.deploy(10)
-            ?.thenAccept {
+        state.override(10)
+            .thenCompose {
+                println("Completed stage 1!")
+                fastState.override(15)
+            }
+            .thenComposeAsync {
+                CompletableFuture.allOf(
+                    fastState.override(5),
+                    state.override(10)
+                )
+            }
+            .thenAccept {
                 println("Completed!")
                 completion = true
             }
-            ?.join()
+            .exceptionally {
+                it.printStackTrace()
+                return@exceptionally null
+            }
+            .join()
     }
 }
