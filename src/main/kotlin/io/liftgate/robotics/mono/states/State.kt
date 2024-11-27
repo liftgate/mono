@@ -1,17 +1,12 @@
 package io.liftgate.robotics.mono.states
 
 import java.util.concurrent.CompletableFuture
-import java.util.concurrent.locks.ReentrantLock
-import java.util.concurrent.locks.ReentrantReadWriteLock
-import kotlin.concurrent.read
-import kotlin.concurrent.withLock
-import kotlin.concurrent.write
 
 /**
  * @author GrowlyX
  * @since 8/31/2024
  */
-class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, private val complete: (T, T) -> Boolean = { one, two -> one == two })
+class State<T : Any>(private val write: (T) -> Unit, private val read: (Boolean) -> T, private val complete: (T, T) -> Boolean = { one, two -> one == two })
 {
     private var current: T? = null
     private var target: T? = null
@@ -31,7 +26,7 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, 
     fun inProgress() = currentJob != null
 
     internal fun periodic() {
-        val current = read()
+        val current = read(currentJob != null)
         this.current = current
 
         additionalPeriodic(current, target)
