@@ -12,14 +12,15 @@ abstract class StateHolder
     val states = mutableSetOf<State<*>>()
     fun allPeriodic()
     {
-        states.forEach {
-            it.periodic()
+        for (state in states)
+        {
+            state.periodic()
         }
     }
 
     inline fun <reified T : Any> state(
         noinline write: (T) -> Unit,
-        noinline read: () -> T,
+        noinline read: (Boolean) -> T,
         noinline complete: (T, T) -> Boolean = { one, two -> one == two }
     ) = object : ReadOnlyProperty<Any, State<T>>
     {

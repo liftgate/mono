@@ -1,5 +1,6 @@
 import io.liftgate.robotics.mono.states.StateHolder
 import org.junit.jupiter.api.Test
+import java.util.concurrent.CompletableFuture
 import kotlin.concurrent.thread
 
 /**
@@ -14,25 +15,28 @@ class StateTests : StateHolder()
             variable = 0
         },
         {
+            variable
+        },
+        { one, two ->
             variable += 1
             println("Variable: $variable")
-            variable
+            one == two
         }
     )
 
-    var variableX = 0
-    val state2 by state(
+
+    var fastVariable = 0
+    val fastState by state(
         {
-            variableX = 0
+            fastVariable = 0
         },
         {
-            variableX += 1
-            println("VariableX: $variableX")
-            if (variableX == 11)
-            {
-                throw NullPointerException("deadlock potential")
-            }
-            variableX
+            fastVariable
+        },
+        { one, two ->
+            fastVariable += 1
+            println("Fast variable: $fastVariable")
+            one == two
         }
     )
 
@@ -48,21 +52,30 @@ class StateTests : StateHolder()
                 }.onFailure {
                     it.printStackTrace()
                 }
-                Thread.sleep(50L)
+                Thread.sleep(1000L)
             }
         }
 
         println("deploying...")
-        state.deploy(20)
-            ?.thenAccept {
-                println("Completed 1!")
+        state.override(10)
+            .thenCompose {
+                println("Completed stage 1!")
+                fastState.override(15)
             }
-            ?.join()
-
-        state2.deploy(15)
-            ?.thenAccept {
-                println("Completed 2!")
+            .thenComposeAsync {
+                CompletableFuture.allOf(
+                    fastState.override(5),
+                    state.override(10)
+                )
             }
-            ?.join()
+            .thenAccept {
+                println("Completed!")
+                completion = true
+            }
+            .exceptionally {
+                it.printStackTrace()
+                return@exceptionally null
+            }
+            .join()
     }
 }

@@ -9,7 +9,7 @@ import kotlin.concurrent.write
  * @author GrowlyX
  * @since 8/31/2024
  */
-class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, private val complete: (T, T) -> Boolean = { one, two -> one == two })
+class State<T : Any>(private val write: (T) -> Unit, private val read: (Boolean) -> T, private val complete: (T, T) -> Boolean = { one, two -> one == two })
 {
     private var current: T? = null
     private var target: T? = null
@@ -32,7 +32,7 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, 
 
     internal fun periodic() = lock.read {
         runCatching {
-            val current = read()
+            val current = read(currentJob != null)
             this.current = current
 
             additionalPeriodic(current, target)
@@ -44,22 +44,14 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, 
 
             if (complete(current, target!!))
             {
-                kotlin.runCatching {
-                    currentJob?.complete(StateResult.Success)
-                }.onFailure {
-                    it.printStackTrace()
-                }
+                currentJob?.complete(StateResult.Success)
                 currentJob = null
                 target = null
             } else if (currentJobTimeOut != 0L)
             {
                 if (System.currentTimeMillis() - currentJobStart > currentJobTimeOut)
                 {
-                    kotlin.runCatching {
-                        currentJob?.complete(StateResult.Timeout)
-                    }.onFailure {
-                        it.printStackTrace()
-                    }
+                    currentJob?.complete(StateResult.Timeout)
                     currentJob = null
                     target = null
                 }
@@ -84,13 +76,13 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, 
         return currentJob!!
     }
 
-    fun override(newValue: T, timeout: Long = 0L): CompletableFuture<StateResult> {
+    fun override(newValue: T, timeout: Long = 0L) = lock.write {
         if (currentJob != null)
         {
             reset()
         }
 
-        return deploy(newValue, timeout)!!
+        return@write deploy(newValue, timeout) ?: CompletableFuture.completedFuture(null)
     }
 
     fun reset() = lock.write {
