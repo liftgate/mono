@@ -43,7 +43,11 @@ class StateTests : StateHolder()
         thread {
             while (!completion)
             {
-                allPeriodic()
+                runCatching {
+                    allPeriodic()
+                }.onFailure {
+                    it.printStackTrace()
+                }
                 Thread.sleep(50L)
             }
         }
