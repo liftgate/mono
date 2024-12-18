@@ -18,6 +18,8 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, 
     private var currentJobStart: Long = System.currentTimeMillis()
     private var currentJobTimeOut: Long = 0L
 
+    private val lock = ReentrantReadWriteLock()
+
     private var additionalPeriodic: (T, T?) -> Unit = { _, _ -> }
 
     fun current() = current ?: throw IllegalStateException("State has not been initialized yet")
@@ -28,34 +30,46 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, 
 
     fun inProgress() = currentJob != null
 
-    internal fun periodic() {
-        val current = read()
-        this.current = current
+    internal fun periodic() = lock.read {
+        runCatching {
+            val current = read()
+            this.current = current
 
-        additionalPeriodic(current, target)
+            additionalPeriodic(current, target)
 
-        if (currentJob == null)
-        {
-            return
-        }
-
-        if (complete(current, target!!))
-        {
-            currentJob?.complete(StateResult.Success)
-            currentJob = null
-            target = null
-        } else if (currentJobTimeOut != 0L)
-        {
-            if (System.currentTimeMillis() - currentJobStart > currentJobTimeOut)
+            if (currentJob == null)
             {
-                currentJob?.complete(StateResult.Timeout)
+                return@runCatching
+            }
+
+            if (complete(current, target!!))
+            {
+                kotlin.runCatching {
+                    currentJob?.complete(StateResult.Success)
+                }.onFailure {
+                    it.printStackTrace()
+                }
                 currentJob = null
                 target = null
+            } else if (currentJobTimeOut != 0L)
+            {
+                if (System.currentTimeMillis() - currentJobStart > currentJobTimeOut)
+                {
+                    kotlin.runCatching {
+                        currentJob?.complete(StateResult.Timeout)
+                    }.onFailure {
+                        it.printStackTrace()
+                    }
+                    currentJob = null
+                    target = null
+                }
             }
+        }.onFailure {
+            it.printStackTrace()
         }
     }
 
-    fun deploy(newValue: T, timeout: Long = 0L): CompletableFuture<StateResult>? {
+    fun deploy(newValue: T, timeout: Long = 0L): CompletableFuture<StateResult>? = lock.write {
         if (currentJob != null)
         {
             return null
@@ -79,7 +93,7 @@ class State<T : Any>(private val write: (T) -> Unit, private val read: () -> T, 
         return deploy(newValue, timeout)!!
     }
 
-    fun reset() {
+    fun reset() = lock.write {
         currentJob?.completeExceptionally(StateCancelException())
         currentJob = null
         target = null
