@@ -78,7 +78,7 @@ fun RepositoryHandler.configureLiftgateRepository()
         return
     }
 
-    maven("$contextUrl/opensource") {
+    maven("$contextUrl/liftgate-robotics") {
         name = "liftgate"
 
         credentials {
